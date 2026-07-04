@@ -84,6 +84,12 @@ LANGUAGE_MAP = {
     'Dockerfile': 'Docker',
 }
 
+# Extensions classified as "Config & Data" in LANGUAGE_MAP.
+# Excluded by default from analysis; opt in with --include-config.
+CONFIG_EXTENSIONS = {
+    '.json', '.xml', '.yaml', '.yml', '.ini', '.toml', '.md', '.rst',
+}
+
 def get_language(file_path):
     """Detects the language of a file based on its extension or name."""
     file_name = os.path.basename(file_path)
@@ -103,7 +109,7 @@ def get_gitignore_spec(project_path):
             return pathspec.PathSpec.from_lines('gitwildmatch', f)
     return None
 
-def analyze_project(project_path, use_gitignore):
+def analyze_project(project_path, use_gitignore, include_config=False):
     """Analyzes the project directory and returns language statistics."""
     stats = defaultdict(lambda: {'lines': 0, 'files': 0})
     
@@ -128,7 +134,12 @@ def analyze_project(project_path, use_gitignore):
             relative_path = os.path.relpath(file_path, project_path).replace('\\', '/')
             if ignore_spec and ignore_spec.match_file(relative_path):
                 continue
-            
+
+            # Skip config & data files unless the user opted in.
+            _, ext = os.path.splitext(file)
+            if not include_config and ext.lower() in CONFIG_EXTENSIONS:
+                continue
+
             language = get_language(file_path)
             if language:
                 try:
@@ -210,6 +221,11 @@ def main():
         '--gitignore', action='store_true',
         help='If set, respects the .gitignore file in the project directory.'
     )
+    parser.add_argument(
+        '--include-config', action='store_true',
+        help='Include config & data files (.json, .xml, .yaml, .yml, '
+             '.ini, .toml, .md, .rst) in the analysis. Off by default.'
+    )
     args = parser.parse_args()
 
     project_path = os.path.abspath(args.path)
@@ -223,15 +239,20 @@ def main():
         console.print(f"Analyzing project at: [bold cyan]{project_path}[/bold cyan]")
         if args.gitignore:
             console.print("Ignoring files specified in .gitignore.", style="italic yellow")
+        if not args.include_config:
+            console.print("Excluding config & data files (use --include-config to include).",
+                          style="italic yellow")
         console.rule()
     else:
         print(f"Analyzing project at: {project_path}")
         if args.gitignore:
             print("Ignoring files specified in .gitignore.")
+        if not args.include_config:
+            print("Excluding config & data files (use --include-config to include).")
         print("-" * 40)
         print("Hint: For a more beautiful output, install the 'rich' library: pip install rich", file=sys.stderr)
 
-    stats = analyze_project(project_path, args.gitignore)
+    stats = analyze_project(project_path, args.gitignore, args.include_config)
     print_results(stats)
 
 if __name__ == '__main__':

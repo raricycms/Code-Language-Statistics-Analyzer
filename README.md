@@ -21,6 +21,7 @@ The script uses the [rich](https://github.com/Textualize/rich) library to genera
 - **Line & File Counting**: Counts the total number of files and lines of code for each language.
 - **Percentage Analysis**: Calculates the percentage contribution of each language to the total codebase.
 - **`.gitignore` Support**: Intelligently ignores files and directories specified in your `.gitignore` file with the `--gitignore` flag.
+- **Config & Data Filtering**: By default, excludes config & data files (`.json`, `.xml`, `.yaml`, `.yml`, `.ini`, `.toml`, `.md`, `.rst`) from the analysis. Use `--include-config` to count them.
 - **Beautiful Output**: Displays results in a clean, colorful, and well-formatted table (requires `rich`).
 - **Cross-Platform**: Works on Windows, macOS, and Linux.
 - **No Dependencies for Basic Use**: Runs out-of-the-box for basic analysis. `rich` and `pathspec` are optional but recommended for the best experience.
@@ -64,6 +65,20 @@ To exclude files and directories listed in your `.gitignore` file, use the `--gi
 
 ```bash
 python code_stats.py --gitignore
+```
+
+**Including Config & Data Files:**
+
+By default, files like `.json`, `.xml`, `.yaml`, `.yml`, `.ini`, `.toml`, `.md`, and `.rst` are excluded from the analysis because they are configuration or documentation rather than source code. To include them, use the `--include-config` flag.
+
+```bash
+python code_stats.py --include-config
+```
+
+You can combine it with `--gitignore`:
+
+```bash
+python code_stats.py --gitignore --include-config
 ```
 
 **Getting Help:**
